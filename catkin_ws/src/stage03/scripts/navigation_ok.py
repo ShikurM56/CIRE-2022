@@ -5,7 +5,7 @@ from simple_pid import PID
 import csv
 import rospy
 import time
-from std_msgs.msg import String, Int32, Bool
+from std_msgs.msg import String, Int32, Bool, Float64
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -20,7 +20,7 @@ pid_x.output_limits = (-0.3, 0.3)
 pid_y = PID(1, 0, 0.0)
 pid_y.output_limits = (-0.3, 0.3)
 
-pid_theta = PID(1.2, 0, 0.0)
+pid_theta = PID(0.5, 0.3, 0.0)
 pid_theta.output_limits = (-0.5, 0.5)
 
 row = 0  # A partir de que waypoint va a iniciar
@@ -38,7 +38,7 @@ goal_theta_pos = 0
 
 def callback_position(data):
     global hsrb_theta_pos, goal_theta_pos, hsrb_x_pos, hsrb_y_pos, goal_x_pos, goal_y_pos, row, roll, pitch, yaw, target_angle, hsrb_angle, distance, rows, error # Se agrego ROW
-    file = open("/home/shikur/CIRE2022/catkin_ws/src/stage03/scripts/csv_files/stage03.csv")
+    file = open("/home/shikur/CIRE-2022/catkin_ws/src/stage03/scripts/csv_files/stage03.csv")
     csvreader = csv.reader(file)
     # header = next(csvreader)
     rows = list(csvreader)
@@ -96,8 +96,9 @@ def main():
     rospy.Subscriber("/global_pose", PoseStamped, callback_position)
     rospy.Subscriber("/stage03/waypoint", Bool, callback_waypoint)
     pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=0)
+    pub_control = rospy.Publisher('/stage03/output_theta', Float64, queue_size=10)
     command = Twist()
-
+    output = Float64()
     while not rospy.is_shutdown():
         #print ("Error de angulo: ", error)
         #print ("Distancia: ", distance)
@@ -121,7 +122,6 @@ def main():
         #print("Distance: ", distance)
         #print("X Distance Respect to the robot: ", new_x_pos)
         #print("Y Distance Respect to the robot: ", new_y_pos)
-
         if abs(error) > 180:
             error = error - (error/abs(error))*360
         #c = math.copysign(1, hsrb_theta_pos)
@@ -141,7 +141,8 @@ def main():
         command.linear.x = -output_x
         command.linear.y = -output_y
         command.angular.z = -output_theta
-        
+        output = -output_theta
+        pub_control.publish(output)
         print ("Error de angulo: ", error)
 
         if (distance < 0.1 and distance > 0):
