@@ -1,4 +1,9 @@
+#!/usr/bin/env python3
+
 def gaze_point(x,y,z):
+    
+    
+    
     head_pose = head.get_current_joint_values()
     head_pose[0]=0.0
     head_pose[1]=0.0
@@ -44,10 +49,6 @@ def gaze_point(x,y,z):
     return succ
 
 
-
-
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import ros_numpy
@@ -65,31 +66,97 @@ import cv2
 import os
 
 
+
 rospy.init_node("recognition")
 
 rgbd = RGBD()
 ###clase rgbd para obtener mensajes de nube de puntos y de imagen
-
-
 listener = tf.TransformListener()
 broadcaster= tf.TransformBroadcaster()
+import moveit_commander
+import moveit_msgs.msg
 
-
-
-
-
+head = moveit_commander.MoveGroupCommander('head')
+#whole_body=moveit_commander.MoveGroupCommander('whole_body_weighted')
+arm =  moveit_commander.MoveGroupCommander('arm')
+arm.set_named_target('go')
+arm.go()
+head.go(np.array((0,-.15*np.pi)))
 
 image=rgbd.get_image()  #dimensiones de la imagen
-image.shape    # una matriz (arreglo tipo numpy) 480px por 680 px 3 canales
+print(image.shape)    # una matriz (arreglo tipo numpy) 480px por 680 px 3 canales
 
 points= rgbd.get_points()    ###Similarmente la nube de puntos "corregida"
-
-
 
 image.dtype  ### TIPO E DATOS int sin signo de 8 bits
 
 plt.imshow(rgbd.get_image())
 
+im_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+im_hsv = cv2.cvtColor(im_bgr, cv2.COLOR_BGR2HSV)#De forma similar podemos
+cv2.imshow("Imagen BGR", im_bgr)
+cv2.imshow("Imagen HSV", im_hsv)
+cv2.waitKey(0)
+# plt.imshow(im_hsv[:,:,0]) , im_hsv.dtype
 
 
+# h_min=0
+# h_max=15
 
+# region = (im_hsv > h_min) & (im_hsv < h_max)
+
+# idx,idy=np.where(region[:,:,0] )
+
+# mask= np.zeros((480,640))
+# mask[idx,idy]=255
+# plt.imshow(mask ,cmap='gray')
+
+# kernel = np.ones((5, 5), np.uint8)
+# eroded_mask=cv2.erode(mask,kernel)
+# dilated_mask=cv2.dilate(eroded_mask,kernel)
+
+# plt.imshow(dilated_mask,cmap='gray')
+
+# points.shape
+
+# contours, hierarchy = cv2.findContours(dilated_mask.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+# for contour in contours:
+#     M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+    
+#     cX = int(M["m10"] / M["m00"])
+#     cY = int(M["m01"] / M["m00"])
+#     boundRect = cv2.boundingRect(contour)
+#     image2=cv2.rectangle(im_hsv,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (255,255,255), 2)
+#     cv2.circle(image2, (cX, cY), 5, (255, 255, 255), -1)
+#     cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+    
+
+# plt.imshow(cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+
+# for contour in contours:
+#     xyz=[]
+#     M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+    
+#     cX = int(M["m10"] / M["m00"])
+#     cY = int(M["m01"] / M["m00"])
+#     boundRect = cv2.boundingRect(contour)
+
+#     for jy in range (boundRect[0], boundRect[0]+boundRect[2]):
+#         for ix in range(boundRect[1], boundRect[1]+boundRect[3]):
+#             aux=(np.asarray((points['x'][ix,jy],points['y'][ix,jy],points['z'][ix,jy])))
+#             if np.isnan(aux[0]) or np.isnan(aux[1]) or np.isnan(aux[2]):
+#                 'reject point'
+#             else:
+#                 xyz.append(aux)
+
+#     xyz=np.asarray(xyz)
+#     cent=xyz.mean(axis=0)
+
+# print (cent)
+
+# x,y,z=cent
+# if np.isnan(x) or np.isnan(y) or np.isnan(z):
+#     print('nan')
+# else:
+#     broadcaster.sendTransform((x,y,z),(0,0,0,1), rospy.Time.now(), 'Object',"head_rgbd_sensor_link")
