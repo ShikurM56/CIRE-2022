@@ -24,8 +24,8 @@ def callback_scan(msg):
     # Haga algo para detectar si hay un obstaculo enfrente del robot.
     # Asigne True o False a la variable 'obstacle_detected'.
     #
-    
-    
+    n = int((msg.angle_max - msg.angle_min)/msg.angle_increment/2)
+    obstacle_detected = msg.ranges[n] < 0.2   
     return
 
 def main():
@@ -46,6 +46,9 @@ def main():
         # Use la variable 'obstacle_detected' para revisar si hay o no obstaculo al frente.
         # Publique el mensaje de tipo Twist usando el publicador 'pub_cmd_vel'.
         #
+        msg_cmd_vel = Twist()
+        msg_cmd_vel.linear.x = 0 if obstacle_detected else .3
+        pub_cmd_vel.publish(msg_cmd_vel)
         
         loop.sleep()
 
@@ -55,4 +58,3 @@ if __name__ == '__main__':
         main()
     except rospy.ROSInterruptException:
         pass
-    

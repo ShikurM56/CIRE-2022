@@ -32,6 +32,5 @@
         <max_contacts>10</max_contacts>
       </collision>
     </link>
-   <static>1</static>
   </model>
 </sdf>
