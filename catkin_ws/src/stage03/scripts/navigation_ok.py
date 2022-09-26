@@ -96,9 +96,8 @@ def main():
     rospy.Subscriber("/global_pose", PoseStamped, callback_position)
     rospy.Subscriber("/stage03/waypoint", Bool, callback_waypoint)
     pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=0)
-    pub_control = rospy.Publisher('/stage03/output_theta', Float64, queue_size=10)
+    
     command = Twist()
-    output = Float64()
     while not rospy.is_shutdown():
         #print ("Error de angulo: ", error)
         #print ("Distancia: ", distance)
@@ -141,8 +140,6 @@ def main():
         command.linear.x = -output_x
         command.linear.y = -output_y
         command.angular.z = -output_theta
-        output = -output_theta
-        pub_control.publish(output)
         print ("Error de angulo: ", error)
 
         if (distance < 0.1 and distance > 0):
@@ -177,4 +174,7 @@ def main():
     rospy.spin()
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
