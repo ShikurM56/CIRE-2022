@@ -9,7 +9,7 @@ from std_msgs.msg import String, Int32, Bool, Float64
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from sensor_msgs.msg import NavSatFix
+from sensor_msgs.msg import NavSatFix, LaserScan
 from geometry_msgs.msg import PoseStamped
 import sys
 
@@ -35,14 +35,17 @@ goal_x_pos = 0
 goal_y_pos = 0 
 hsrb_theta_pos = 0
 goal_theta_pos = 0
+bandera = 0
 
 def callback_scan(data):
-    n = int((msg.angle_max - msg.angle_min)/msg.angle_increment/2)
-    obstacle_detected = msg.ranges[n] < 0.2   
+    global obstacle_detected
+    n = int((data.angle_max - data.angle_min)/data.angle_increment/2)
+    print (n)
+    obstacle_detected = data.ranges[n] < 0.3   
     return
 
 def callback_position(data):
-    global hsrb_theta_pos, goal_theta_pos, hsrb_x_pos, hsrb_y_pos, goal_x_pos, goal_y_pos, row, roll, pitch, yaw, target_angle, hsrb_angle, distance, rows, error # Se agrego ROW
+    global hsrb_theta_pos, goal_theta_pos, hsrb_x_pos, hsrb_y_pos, goal_x_pos, goal_y_pos, row, roll, pitch, yaw, target_angle, hsrb_angle, distance, rows, error, obstacle_detected # Se agrego ROW
     file = open("/home/shikur/CIRE-2022/catkin_ws/src/stage03/scripts/csv_files/stage03.csv")
     csvreader = csv.reader(file)
     # header = next(csvreader)
@@ -87,23 +90,26 @@ def callback_position(data):
     #goal_position_publisher.publish(goal_pub)
 
 def callback_waypoint(data):
-    global rows, row
+    global rows, row, bandera
 
     if (data):
         print("Siguiente checkpoint")
         row+=1
+        #bandera = 0
         time.sleep(0.1)
-#command = Twist()
 
 def main():    
-    global distance, error, target_angle, hsrb_angle, row, goal_x_pos, goal_y_pos, hsrb_x_pos, hsrb_y_pos, goal_theta_pos, row, rows
+    global obstacle_detected, distance, error, target_angle, hsrb_angle, row, goal_x_pos, goal_y_pos, hsrb_x_pos, hsrb_y_pos, goal_theta_pos, row, rows, bandera
     rospy.init_node('navigation_ok', anonymous=True)
     rospy.Subscriber("/global_pose", PoseStamped, callback_position)
     rospy.Subscriber("/stage03/waypoint", Bool, callback_waypoint)
     rospy.Subscriber("/hsrb/base_scan", LaserScan, callback_scan)
     pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=0)
-
+    pub_status = rospy.Publisher('/stage03/status', String, queue_size=0)
+    #status = String()
     command = Twist()
+    obstacle_detected = False
+
     while not rospy.is_shutdown():
         #print ("Error de angulo: ", error)
         #print ("Distancia: ", distance)
@@ -147,21 +153,26 @@ def main():
         command.linear.y = -output_y
         command.angular.z = -output_theta
         print ("Error de angulo: ", error)
-
+        if (distance > 0.2):
+            bandera = 0
         if (distance < 0.1 and distance > 0):
             command.linear.x = 0
             command.linear.y = 0
+            if (bandera == 0):
+                pub_status.publish(rows[row][0])
+            bandera = 1
+
             if (abs(error) < 2):
                 if (rows[row][0]) == "PASS": #Avoid
                     print("Siguiente checkpoint")
                     row += 1
+                    bandera = 0
                     time.sleep(0.1)
             #    else:
             #        print("Siguiente checkpoint")
             #        time.sleep(5)
             #        row += 1
             #        time.sleep(0.1)
-
         # else:
         #     if abs(error) > 180:
         #         error = error -(error/abs(error))*360
@@ -172,7 +183,12 @@ def main():
         #     command.linear.x = 0
         #     command.linear.y = 0
 
-        
+        # Evasion de obstaculos
+        if (obstacle_detected):
+            command.linear.x  = 0
+            command.linear.y  = -0.2
+            command.angular.z = 0
+
         pub.publish(command)
         print("")
 
