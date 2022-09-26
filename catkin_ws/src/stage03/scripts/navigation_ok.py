@@ -36,6 +36,11 @@ goal_y_pos = 0
 hsrb_theta_pos = 0
 goal_theta_pos = 0
 
+def callback_scan(data):
+    n = int((msg.angle_max - msg.angle_min)/msg.angle_increment/2)
+    obstacle_detected = msg.ranges[n] < 0.2   
+    return
+
 def callback_position(data):
     global hsrb_theta_pos, goal_theta_pos, hsrb_x_pos, hsrb_y_pos, goal_x_pos, goal_y_pos, row, roll, pitch, yaw, target_angle, hsrb_angle, distance, rows, error # Se agrego ROW
     file = open("/home/shikur/CIRE-2022/catkin_ws/src/stage03/scripts/csv_files/stage03.csv")
@@ -95,8 +100,9 @@ def main():
     rospy.init_node('navigation_ok', anonymous=True)
     rospy.Subscriber("/global_pose", PoseStamped, callback_position)
     rospy.Subscriber("/stage03/waypoint", Bool, callback_waypoint)
+    rospy.Subscriber("/hsrb/base_scan", LaserScan, callback_scan)
     pub = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=0)
-    
+
     command = Twist()
     while not rospy.is_shutdown():
         #print ("Error de angulo: ", error)
