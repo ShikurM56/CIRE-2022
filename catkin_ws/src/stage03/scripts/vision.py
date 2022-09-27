@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
 
+import moveit_commander
+import moveit_msgs.msg
+import matplotlib.pyplot as plt
+import numpy as np
+import ros_numpy
+import rospy
+import tf
+from gazebo_ros import gazebo_interface
+from sensor_msgs.msg import LaserScan, PointCloud2
+from geometry_msgs.msg import Pose, Quaternion ,TransformStamped
+from std_msgs.msg import String, Int32, Bool, Float64
+import sys
+from utils_notebooks import *
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+
+import cv2
+import os
+
+
+
 def gaze_point(x,y,z):
     head_pose = head.get_current_joint_values()
     head_pose[0]=0.0
@@ -29,51 +49,40 @@ def gaze_point(x,y,z):
     succ=head.go()
     return succ
 
-import moveit_commander
-import moveit_msgs.msg
-import matplotlib.pyplot as plt
-import numpy as np
-import ros_numpy
-import rospy
-import tf
-from gazebo_ros import gazebo_interface
-from sensor_msgs.msg import LaserScan, PointCloud2
-from geometry_msgs.msg import Pose, Quaternion ,TransformStamped
-from std_msgs.msg import String, Int32, Bool, Float64
-import sys
-from utils_notebooks import *
-import cv2
-import os
+def correct_points(low_plane=.0,high_plane=0.2):
+
+    #Corrects point clouds "perspective" i.e. Reference frame head is changed to reference frame map
+    data = rospy.wait_for_message('/hsrb/head_rgbd_sensor/depth_registered/rectified_points', PointCloud2)
+    np_data=ros_numpy.numpify(data)
+    trans,rot=listener.lookupTransform('/map', '/head_rgbd_sensor_gazebo_frame', rospy.Time(0)) 
+    
+    eu=np.asarray(tf.transformations.euler_from_quaternion(rot))
+    t=TransformStamped()
+    rot=tf.transformations.quaternion_from_euler(-eu[1],0,0)
+    t.header.stamp = data.header.stamp
+    
+    t.transform.rotation.x = rot[0]
+    t.transform.rotation.y = rot[1]
+    t.transform.rotation.z = rot[2]
+    t.transform.rotation.w = rot[3]
+
+    cloud_out = do_transform_cloud(data, t)
+    np_corrected=ros_numpy.numpify(cloud_out)
+    corrected=np_corrected.reshape(np_data.shape)
+
+    img= np.copy(corrected['y'])
+
+    img[np.isnan(img)]=2
+    #img3 = np.where((img>low)&(img< 0.99*(trans[2])),img,255)
+    img3 = np.where((img>0.99*(trans[2])-high_plane)&(img< 0.99*(trans[2])-low_plane),img,255)
+    return img3
+
 
 waypoint = 0 #de 0 a 2, donde 2 son las llavecitas
 
-# def correct_points (low_plane = 0.0, high_plane = 0.2):
-#     data = rospy.wait_for_message('/hsrb/head_rgbd_sensor/depth_r...')
-#     np_data = ros_numpy.numpify(data)
-#     trans,rot = listener.lookupTransform('/map', '/head_rgbd_sensor_...')
-    
-#     eu = np.asarray(tf.transformations.euler_from_quaternion(rot))
-#     t = TransformStamped()
-#     rot = tf.transformations.quaternion_from_euler(-eu[1], 0, 0)
-#     t.header.stamp = data.header.stamp
-
-#     t.transform.rotation.x = rot [0]
-#     t.transform.rotation.y = rot [1]
-#     t.transform.rotation.z = rot [2]
-#     t.transform.rotation.w = rot [3]
-    
-#     cloud_out = do_transform_cloud(data, t)
-#     np_corrected = ros_numpy.numpify(cloud_out)
-#     corrected = np_corrected.reshape(np_data.shape)
-
-#     img = np.copy(corrected('y'))
-    
-#     img[np.isnan(img)] = 2
-#     img3 = np.where((img>0.99*(trans[2])-high_plane)&(img<0.99*(tran.....)))
-#     return img3
 
 def vision():
-    global waypoint
+    global waypoint, listener, head, broadcaster
     pub = rospy.Publisher("stage03/waypoint", Bool, queue_size=1) #Si lo deja publicado, cambiar a 0
     rospy.init_node("vision", anonymous=True)
     rate = rospy.Rate(10) # 10hz
@@ -106,9 +115,11 @@ def vision():
   #      im_hsv = cv2.cvtColor(im_bgr, cv2.COLOR_BGR2HSV)#De forma similar podemos
         cv2.imshow("Imagen BGR", im_bgr)
  #       cv2.imshow("Imagen HSV", im_hsv)
-        cv2.waitKey(10)
         # plt.imshow(im_hsv[:,:,0]) , im_hsv.dtype
         
+        corrected=correct_points(0.1,0.2)
+        cv2.imshow("Correct points", corrected)
+        cv2.waitKey(10)
 
         # h_min=0
         # h_max=15
