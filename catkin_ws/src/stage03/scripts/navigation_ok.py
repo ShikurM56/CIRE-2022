@@ -155,14 +155,15 @@ def main():
         print ("Error de angulo: ", error)
         if (distance > 0.2):
             bandera = 0
+
         if (distance < 0.1 and distance > 0):
             command.linear.x = 0
             command.linear.y = 0
-            if (bandera == 0):
-                pub_status.publish(rows[row][0])
-            bandera = 1
-
+            
             if (abs(error) < 2):
+                if (bandera == 0):
+                    pub_status.publish(rows[row][0])
+                bandera = 1
                 if (rows[row][0]) == "PASS": #Avoid
                     print("Siguiente checkpoint")
                     row += 1
