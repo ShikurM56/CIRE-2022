@@ -82,7 +82,7 @@ import os
 #     img3 = np.where((img>0.99*(trans[2])-high_plane)&(img< 0.99*(trans[2])-low_plane),img,255)
 #     return img3
 
-
+path  = "/home/shikur/CIRE-2022/catkin_ws/src/stage03/scripts/images"
 def callback_status(data):
     global status
     status = data.data
@@ -111,9 +111,10 @@ def vision():
 
     status_waypoint = Bool
     status = ""
-    print ("Vision inicializada")
+    print ("Vision inicializada, espera los proximos dos warnings")
     while not rospy.is_shutdown():    
         if (status == "CUBE"):
+    
             time.sleep(2) #A que se estabilice
             print ("Entre a CUBE")
 
@@ -126,7 +127,7 @@ def vision():
 
             im_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             im_hsv = cv2.cvtColor(im_bgr, cv2.COLOR_BGR2HSV)#De forma similar podemos
-            cv2.imshow("Imagen BGR", im_bgr)
+            #cv2.imshow("Imagen BGR", im_bgr)
             #cv2.waitKey(10)
 
             # ------ > CUBO < ------ #
@@ -138,8 +139,8 @@ def vision():
             h_max_red = 10 # OK
             h_min_orange = 10 # OK
             h_max_orange = 12 # OK
-            #h_min_white = 165
-            #h_max_white = 180
+            h_min_white = 20
+            h_max_white = 30
             h_min_blue = 105 # OK
             h_max_blue = 110 # OK
 
@@ -151,6 +152,7 @@ def vision():
             region_yellow = (im_hsv > h_min_yellow) & (im_hsv < h_max_yellow)
             region_red = (im_hsv > h_min_red) & (im_hsv < h_max_red)
             region_orange = (im_hsv > h_min_orange) & (im_hsv < h_max_orange)
+            region_white = (im_hsv > h_min_white) & (im_hsv < h_max_white)
             region_blue = (im_hsv > h_min_blue) & (im_hsv < h_max_blue)
             region_red_high = (im_hsv > h_min_red_high) & (im_hsv < h_max_red_high)
 
@@ -159,6 +161,7 @@ def vision():
             idx_yellow,idy_yellow=np.where(region_yellow[:,:,0] )
             idx_red,idy_red=np.where(region_red[:,:,0] )
             idx_orange,idy_orange=np.where(region_orange[:,:,0] )
+            idx_white,idy_white=np.where(region_white[:,:,0] )
             idx_blue,idy_blue=np.where(region_blue[:,:,0] )
             idx_red_high,idy_red_high=np.where(region_red_high[:,:,0] )
 
@@ -166,6 +169,7 @@ def vision():
             mask_yellow= np.zeros((480,640))
             mask_red= np.zeros((480,640))
             mask_orange= np.zeros((480,640))
+            mask_white= np.zeros((480,640))
             mask_blue= np.zeros((480,640))
             mask_red_high= np.zeros((480,640))
             
@@ -174,6 +178,7 @@ def vision():
             mask_yellow[idx_yellow,idy_yellow]=255
             mask_red[idx_red,idy_red]=255
             mask_orange[idx_orange,idy_orange]=255
+            mask_white[idx_white,idy_white]=255
             mask_blue[idx_blue,idy_blue]=255
             mask_red_high[idx_red_high,idy_red_high]=255
 
@@ -181,6 +186,7 @@ def vision():
             kernel_yellow = np.ones((3, 3), np.uint8) # Por el fondo...
             kernel_red = np.ones((5, 5), np.uint8) # 
             kernel_orange = np.ones((3, 3), np.uint8) # 
+            kernel_white = np.ones((3, 3), np.uint8) # 
             kernel_blue = np.ones((3, 3), np.uint8) # 
             kernel_red_high = np.ones((3, 3), np.uint8) # 
 
@@ -194,6 +200,8 @@ def vision():
             dilated_mask_red=cv2.dilate(eroded_mask_red,kernel_red)
             eroded_mask_orange=cv2.erode(mask_orange,kernel_orange)
             dilated_mask_orange=cv2.dilate(eroded_mask_orange,kernel_orange)
+            eroded_mask_white=cv2.erode(mask_white,kernel_white)
+            dilated_mask_white=cv2.dilate(eroded_mask_white,kernel_white)
             eroded_mask_blue=cv2.erode(mask_blue,kernel_blue)
             dilated_mask_blue=cv2.dilate(eroded_mask_blue,kernel_blue)
             eroded_mask_red_high=cv2.erode(mask_red_high,kernel_red_high)
@@ -203,15 +211,17 @@ def vision():
             #cv2.imshow("Yellow mask: ", dilated_mask_yellow)
             #cv2.imshow("Red mask Low: ", dilated_mask_red)
             #cv2.imshow("Orange mask: ", dilated_mask_orange)
+            #cv2.imshow("White mask: ", dilated_mask_white)
             #cv2.imshow("Blue mask: ", dilated_mask_blue)
             #cv2.imshow("Red High mask: ", dilated_mask_red_high)
+            #cv2.imshow("Red High mask: ", dilated_mask_red_high)
 
-            cube_mask_completed = 255*(dilated_mask_green + dilated_mask_yellow + dilated_mask_red + dilated_mask_orange + dilated_mask_blue + dilated_mask_red_high) # Falta orange
+            cube_mask_completed = 255*(dilated_mask_green + dilated_mask_yellow + dilated_mask_red + dilated_mask_orange + dilated_mask_blue + dilated_mask_red_high + dilated_mask_white) # Falta orange
             cube_mask_completed = cube_mask_completed.clip(0, 255).astype("uint8")
             #cv2.imshow("Cube mask completed", cube_mask_completed)
 
             #Rellenar huecos
-            kernel_completed = np.ones((5, 5), np.uint8)
+            kernel_completed = np.ones((9, 9), np.uint8)
             dilated_mask_completed=cv2.dilate(cube_mask_completed,kernel_completed)
             eroded_mask_completed=cv2.erode(dilated_mask_completed,kernel_completed)
 
@@ -227,7 +237,9 @@ def vision():
                 image2=cv2.rectangle(im_hsv,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (255,255,255), 2)
                 cv2.circle(image2, (cX, cY), 3, (255, 255, 255), -1)
                 cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
-            #cv2.imshow("Imagen chida: ", cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            #cv2.imshow("Imagen con centroides: ", cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            cv2.imwrite(os.path.join(path , 'ImagenConCentroides_cube.jpg'), cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            #cv2.waitKey(10)
 
             i = 0
             for contour in contours:
@@ -248,6 +260,121 @@ def vision():
                 xyz=np.asarray(xyz)
                 cent=xyz.mean(axis=0)
 
+                #centroide de los puntos en la coordenada  respectiva al sensor
+                #print (cent)
+                x,y,z=cent
+                if np.isnan(x) or np.isnan(y) or np.isnan(z):
+                    print('nan')
+                else:
+                    broadcaster.sendTransform((x,y,z),(0,0,0,1), rospy.Time.now(), 'Object',"head_rgbd_sensor_link")
+
+                # #Posición relativa al sensor
+                time.sleep(0.5)            
+                con_respecto_mapa = listener.lookupTransform('map','Object',rospy.Time(0))
+                
+                texto = 'Object_fixed' + str(i)
+                broadcaster.sendTransform((con_respecto_mapa[0]),(0,0,0,1), rospy.Time.now(), texto,'map')
+                i+=1
+
+            print ("Detecte " + str(i) + " cubos")
+            time.sleep(5)
+            pub.publish(True)
+            
+            #Apuntamos hacia abajo para el taladro
+            head.go(np.array((0, -0.3*np.pi)))
+
+
+
+
+        if (status == "DRILL"):
+    
+            time.sleep(2) #A que se estabilice
+            print ("Entre a DRILL")
+
+            image=rgbd.get_image()  #dimensiones de la imagen
+        #       print(image.shape)    # una matriz (arreglo tipo numpy) 480px por 680 px 3 canales
+
+            points= rgbd.get_points()    ###Similarmente la nube de puntos "corregida"
+
+        #     image.dtype  ### TIPO E DATOS int sin signo de 8 bits
+
+            im_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            im_hsv = cv2.cvtColor(im_bgr, cv2.COLOR_BGR2HSV)#De forma similar podemos
+            #cv2.imshow("Imagen BGR", im_bgr)
+            #cv2.waitKey(10)
+
+            # ------ > TALADRO < ------ #
+
+            h_min_orange = 5 # OK
+            h_max_orange = 12 # OK
+            h_min_black = 30 # OK
+            h_max_black = 61 # OK
+
+            region_orange = (im_hsv > h_min_orange) & (im_hsv < h_max_orange)
+            region_black = (im_hsv > h_min_black) & (im_hsv < h_max_black)
+          
+            idx_orange,idy_orange=np.where(region_orange[:,:,0] )
+            idx_black,idy_black=np.where(region_black[:,:,0] )
+        
+            mask_orange= np.zeros((480,640))
+            mask_black= np.zeros((480,640))
+
+            mask_orange[idx_orange,idy_orange]=255
+            mask_black[idx_black,idy_black]=255
+
+            kernel_orange = np.ones((5, 5), np.uint8) # 
+            kernel_black = np.ones((5, 5), np.uint8) # 
+
+            eroded_mask_orange=cv2.erode(mask_orange,kernel_orange)
+            dilated_mask_orange=cv2.dilate(eroded_mask_orange,kernel_orange)
+            eroded_mask_black=cv2.erode(mask_black,kernel_black)
+            dilated_mask_black=cv2.dilate(eroded_mask_black,kernel_black)
+         
+            #cv2.imshow("Orange mask: ", dilated_mask_orange)
+
+            cube_mask_completed = 255*(dilated_mask_orange + dilated_mask_black)
+            cube_mask_completed = cube_mask_completed.clip(0, 255).astype("uint8")
+            #cv2.imshow("Cube mask completed", cube_mask_completed)
+
+            #Rellenar huecos
+            kernel_completed = np.ones((9, 9), np.uint8)
+            dilated_mask_completed=cv2.dilate(cube_mask_completed,kernel_completed)
+            eroded_mask_completed=cv2.erode(dilated_mask_completed,kernel_completed)
+
+            #cv2.imshow("Dilated and eroded completed mask", eroded_mask_completed)
+
+            contours, hierarchy = cv2.findContours(eroded_mask_completed.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+                
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                boundRect = cv2.boundingRect(contour)
+                image2=cv2.rectangle(im_hsv,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (255,255,255), 2)
+                cv2.circle(image2, (cX, cY), 3, (255, 255, 255), -1)
+                #cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+            #cv2.imshow("Imagen con centroides: ", cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            cv2.imwrite(os.path.join(path , 'ImagenConCentroides_drill.jpg'), cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            #cv2.waitKey(10)
+
+            i = 0
+            for contour in contours:
+                xyz=[]
+                M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+            
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                boundRect = cv2.boundingRect(contour)
+                for jy in range (boundRect[0], boundRect[0]+boundRect[2]):
+                    for ix in range(boundRect[1], boundRect[1]+boundRect[3]):
+                        aux=(np.asarray((points['x'][ix,jy],points['y'][ix,jy],points['z'][ix,jy])))
+                        if np.isnan(aux[0]) or np.isnan(aux[1]) or np.isnan(aux[2]):
+                            print ('reject point')
+                        elif eroded_mask_completed[ix][jy] == 255:
+                            xyz.append(aux)
+        #                    print (aux)
+                xyz=np.asarray(xyz)
+                cent=xyz.mean(axis=0)
 
                 #centroide de los puntos en la coordenada  respectiva al sensor
                 #print (cent)
@@ -257,44 +384,138 @@ def vision():
                 else:
                     broadcaster.sendTransform((x,y,z),(0,0,0,1), rospy.Time.now(), 'Object',"head_rgbd_sensor_link")
 
-
                 # #Posición relativa al sensor
-                #  ## A PARTIR DE AQUI DA ERROR
                 time.sleep(0.5)            
                 con_respecto_mapa = listener.lookupTransform('map','Object',rospy.Time(0))
-                #print(x,y,z = con_respecto_mapa[0])
-                #print(type(con_respecto_mapa))
-                #print ("ayuda")
-
+                
                 texto = 'Object_fixed' + str(i)
                 broadcaster.sendTransform((con_respecto_mapa[0]),(0,0,0,1), rospy.Time.now(), texto,'map')
-                time.sleep(0.5)
                 i+=1
 
-            #cv2.waitKey(0)
-            print ("Detecte " + str(i) + " cubos")
-            time.sleep(6)
+            print ("Detecte " + str(i) + " taladros")
+            time.sleep(5)
             pub.publish(True)
-            
+            #Apuntamos hacia abajo para las llave
+            head.go(np.array((0, -0.35*np.pi)))
 
 
 
 
-       
-        # if (status == "DRILL"):
-        #     print ("Entre a DRILL")
-        #     print ("Envie esas chunches")
-        #     #head.go(np.array((0,-.15*np.pi))) ##-27 deg (mirar al suelo)
-        #     print ("Miro al suelo")
+        if (status == "WRENCH"):
     
-        # if (status == "WRENCH"):
-        #     print ("Entre a WRENCH")
-        #     print ("Envie esas chunches")
-        #     #head.go(np.array((0,-.15*np.pi))) ##-27 deg (mirar al suelo)
-        #     print ("Miro al suelo")
+            time.sleep(2) #A que se estabilice
+            print ("Entre a WRENCH")
+
+            image=rgbd.get_image()  #dimensiones de la imagen
+        #       print(image.shape)    # una matriz (arreglo tipo numpy) 480px por 680 px 3 canales
+
+            points= rgbd.get_points()    ###Similarmente la nube de puntos "corregida"
+
+        #     image.dtype  ### TIPO E DATOS int sin signo de 8 bits
+
+            im_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            im_hsv = cv2.cvtColor(im_bgr, cv2.COLOR_BGR2HSV)#De forma similar podemos
+            #cv2.imshow("Imagen BGR", im_bgr)
+            #cv2.waitKey(10)
+
+            # ------ > WRENCH < ------ #
+
+            #h_min_orange = 5 # OK
+            #h_max_orange = 12 # OK
+            h_min_black = 50 # OK
+            h_max_black = 120 # OK
+
+            #region_orange = (im_hsv > h_min_orange) & (im_hsv < h_max_orange)
+            region_black = (im_hsv > h_min_black) & (im_hsv < h_max_black)
+          
+            #idx_orange,idy_orange=np.where(region_orange[:,:,0] )
+            idx_black,idy_black=np.where(region_black[:,:,0] )
+        
+            #mask_orange= np.zeros((480,640))
+            mask_black= np.zeros((480,640))
+
+            #mask_orange[idx_orange,idy_orange]=255
+            mask_black[idx_black,idy_black]=255
+
+            #kernel_orange = np.ones((3, 3), np.uint8) # 
+            kernel_black = np.ones((3, 3), np.uint8) # 
+
+            #eroded_mask_orange=cv2.erode(mask_orange,kernel_orange)
+            #dilated_mask_orange=cv2.dilate(eroded_mask_orange,kernel_orange)
+            eroded_mask_black=cv2.erode(mask_black,kernel_black)
+            dilated_mask_black=cv2.dilate(eroded_mask_black,kernel_black)
+         
+            #cv2.imshow("Orange mask: ", dilated_mask_orange)
+
+            cube_mask_completed = 255*(dilated_mask_black)
+            cube_mask_completed = cube_mask_completed.clip(0, 255).astype("uint8")
+            #cv2.imshow("Cube mask completed", cube_mask_completed)
+
+            #Rellenar huecos
+            kernel_completed = np.ones((9, 9), np.uint8)
+            dilated_mask_completed=cv2.dilate(cube_mask_completed,kernel_completed)
+            eroded_mask_completed=cv2.erode(dilated_mask_completed,kernel_completed)
+
+            #cv2.imshow("Dilated and eroded completed mask", eroded_mask_completed)
+
+            contours, hierarchy = cv2.findContours(eroded_mask_completed.astype('uint8'),cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+            for contour in contours:
+                M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+                
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                boundRect = cv2.boundingRect(contour)
+                image2=cv2.rectangle(im_hsv,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (255,255,255), 2)
+                cv2.circle(image2, (cX, cY), 3, (255, 255, 255), -1)
+                #cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+            #cv2.imshow("Imagen con centroides: ", cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            cv2.imwrite(os.path.join(path , 'ImagenConCentroides_wrench.jpg'), cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
+            #cv2.waitKey(10)
+
+            i = 0
+            for contour in contours:
+                xyz=[]
+                M = cv2.moments(contour) #MOMENTOS ESADISTICOS DE LA IMAGEN
+            
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                boundRect = cv2.boundingRect(contour)
+                for jy in range (boundRect[0], boundRect[0]+boundRect[2]):
+                    for ix in range(boundRect[1], boundRect[1]+boundRect[3]):
+                        aux=(np.asarray((points['x'][ix,jy],points['y'][ix,jy],points['z'][ix,jy])))
+                        if np.isnan(aux[0]) or np.isnan(aux[1]) or np.isnan(aux[2]):
+                            print ('reject point')
+                        elif eroded_mask_completed[ix][jy] == 255:
+                            xyz.append(aux)
+        #                    print (aux)
+                xyz=np.asarray(xyz)
+                cent=xyz.mean(axis=0)
+
+                #centroide de los puntos en la coordenada  respectiva al sensor
+                #print (cent)
+                x,y,z=cent
+                if np.isnan(x) or np.isnan(y) or np.isnan(z):
+                    print('nan')
+                else:
+                    broadcaster.sendTransform((x,y,z),(0,0,0,1), rospy.Time.now(), 'Object',"head_rgbd_sensor_link")
+
+                # #Posición relativa al sensor
+                time.sleep(0.5)            
+                con_respecto_mapa = listener.lookupTransform('map','Object',rospy.Time(0))
+                
+                texto = 'Object_fixed' + str(i)
+                broadcaster.sendTransform((con_respecto_mapa[0]),(0,0,0,1), rospy.Time.now(), texto,'map')
+                i+=1
+
+            print ("Detecte " + str(i) + " llaves")
+            time.sleep(5)
+            pub.publish(True)          
 
 
-            status = "" #Se resetea la variable y se espera a que se vuelva a asignar, si no se queda con esa variable siempre
+
+
+
+        status = "" #Se resetea la variable y se espera a que se vuelva a asignar, si no se queda con esa variable siempre
     
 
 if __name__ == '__main__':
