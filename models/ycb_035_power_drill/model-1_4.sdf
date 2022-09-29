@@ -14,7 +14,6 @@
           <izz>0.00419047371226</izz>
         </inertia>
       </inertial>
-      
       <visual name='ycb_035_power_drill_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -23,7 +22,6 @@
           </mesh>
         </geometry>
       </visual>
-
       <collision name='ycb_035_power_drill_collision'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>

@@ -40,7 +40,7 @@ bandera = 0
 def callback_scan(data):
     global obstacle_detected
     n = int((data.angle_max - data.angle_min)/data.angle_increment/2)
-    print (n)
+    #print (n)
     obstacle_detected = data.ranges[n] < 0.3   
     return
 
@@ -119,10 +119,10 @@ def main():
 
         #print ("Goal X Position: ", goal_x_pos)
         #print ("Goal Y Position: ", goal_y_pos)
-        print ("Goal Theta Position: ", goal_theta_pos)
+        #print ("Goal Theta Position: ", goal_theta_pos)
         #print ("HSRB X Position: ", hsrb_x_pos)
         #print ("HSRB Y Position: ", hsrb_y_pos)
-        print ("HSRB Theta Position: ", hsrb_theta_pos)
+        #print ("HSRB Theta Position: ", hsrb_theta_pos)
 
 
         new_angle = target_angle - hsrb_angle
@@ -152,23 +152,35 @@ def main():
         command.linear.x = -output_x
         command.linear.y = -output_y
         command.angular.z = -output_theta
-        print ("Error de angulo: ", error)
-        if (distance > 0.2):
+        #print ("Error de angulo: ", error)
+        if (distance > 0.15):
             bandera = 0
 
         if (distance < 0.1 and distance > 0):
             command.linear.x = 0
             command.linear.y = 0
             
-            if (abs(error) < 2):
+            if (abs(error) < 0.2):
+
                 if (bandera == 0):
+                    #command.linear.x = 0
+                    #command.linear.y = 0
+                    #command.linear.z = 0
+                    #pub.publish(command)
                     pub_status.publish(rows[row][0])
-                bandera = 1
-                if (rows[row][0]) == "PASS": #Avoid
-                    print("Siguiente checkpoint")
+                    
+                    #time.sleep(10)
+
+
+                if (rows[row][0]) == "PASS" and bandera == 0: #Avoid
+                    print("Siguiente checkpoint de pass")
                     row += 1
                     bandera = 0
                     time.sleep(0.1)
+
+                bandera = 1
+
+            #bandera = 1
             #    else:
             #        print("Siguiente checkpoint")
             #        time.sleep(5)
@@ -191,7 +203,7 @@ def main():
             command.angular.z = 0
 
         pub.publish(command)
-        print("")
+        #print("")
 
 
     rospy.spin()
