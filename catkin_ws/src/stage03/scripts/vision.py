@@ -209,7 +209,7 @@ def callback_status(data):
             boundRect = cv2.boundingRect(contour)
             image2=cv2.rectangle(im_hsv,(boundRect[0], boundRect[1]),(boundRect[0]+boundRect[2], boundRect[1]+boundRect[3]), (255,255,255), 2)
             cv2.circle(image2, (cX, cY), 3, (255, 255, 255), -1)
-            cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+            #cv2.putText(image2, "centroid_"+str(cX)+','+str(cY)    ,    (cX - 50, cY - 25)   ,cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
         #cv2.imshow("Imagen con centroides: ", cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
         cv2.imwrite(os.path.join(path , 'ImagenConCentroides_cube.jpg'), cv2.cvtColor( image2, cv2.COLOR_HSV2RGB))
         #cv2.waitKey(10)
@@ -369,7 +369,7 @@ def callback_status(data):
         time.sleep(5)
         pub.publish(True)
         #Apuntamos hacia abajo para las llave
-        head.go(np.array((0, -0.35*np.pi)))
+        head.go(np.array((0, -0.30*np.pi)))
 
 
 
