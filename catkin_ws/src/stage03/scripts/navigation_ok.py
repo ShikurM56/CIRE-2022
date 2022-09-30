@@ -91,7 +91,6 @@ def callback_position(data):
 
 def callback_waypoint(data):
     global rows, row, bandera
-
     if (data):
         print("Siguiente checkpoint")
         row+=1

@@ -293,8 +293,8 @@ def vision():
 
 
         if (status == "DRILL"):
-            print ("Moviendo la cabeza por si no esta en la posicion")
-            head.go(np.array((0, -0.3*np.pi)))
+            #print ("Moviendo la cabeza por si no esta en la posicion")
+            #head.go(np.array((0, -0.3*np.pi)))
             time.sleep(3) #A que se estabilice
             print ("Entre a DRILL")
 
@@ -406,7 +406,7 @@ def vision():
 
             print ("Detecte " + str(i) + " taladros")
             time.sleep(5)
-            #pub.publish(True)
+            pub.publish(True)
             #Apuntamos hacia abajo para las llave
             head.go(np.array((0, -0.30*np.pi)))
             status = "" #Se resetea la variable y se espera a que se vuelva a asignar, si no se queda con esa variable siempre
@@ -523,34 +523,43 @@ def vision():
 
             print ("Detecte " + str(i) + " llaves")
             time.sleep(5)
-            pub.publish(True)          
+            #pub.publish(True)          
             status = "" #Se resetea la variable y se espera a que se vuelva a asignar, si no se queda con esa variable siempre
+
+
+
+            ##### Guardado de archivo e impresion de coordenadas
         
-        if (status == "FINISHED"):
+#        if (status == "FINISHED"):
+            archivo=open("/home/shikur/CIRE-2022/catkin_ws/src/stage03/scripts/output.txt","w") 
             contador = 1
             print ("")
+            archivo.write("------> Cubos <------\n")
             print ("------> Cubos <------ ")
             print ("Cubos encontrados: " + str(len(cubes_array)))
             for x in cubes_array:
+                archivo.write("Coordenadas cubo " + str(contador) + ": " + str(x) + "\n")
                 print ("Coordenadas cubo " + str(contador) + ": " + str(x))
                 contador +=1
 
             contador = 1
             print ("------> TALADROS <------ ")
-            print ("Taladros encontrados: " + str(len(cubes_array)))
-            for x in cubes_array:
+            print ("Taladros encontrados: " + str(len(drills_array)))
+            for x in drills_array:
+                archivo.write("Coordenadas taladro " + str(contador) + ": " + str(x) + "\n")
                 print ("Coordenadas taladro " + str(contador) + ": " + str(x))
                 contador +=1
             
             contador = 1
             print ("------> Llaves <------ ")
-            print ("Llaves encontradas: " + str(len(cubes_array)))
-            for x in cubes_array:
+            print ("Llaves encontradas: " + str(len(wrenchs_array)))
+            for x in wrenchs_array:
+                archivo.write("Coordenadas llave " + str(contador) + ": " + str(x) + "\n")
                 print ("Coordenadas llave " + str(contador) + ": " + str(x))
                 contador +=1
             contador = 1
-
-
+            
+            archivo.close()
             status = "" #Se resetea la variable y se espera a que se vuelva a asignar, si no se queda con esa variable siempre
 
 
