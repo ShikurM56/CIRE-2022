@@ -86,7 +86,7 @@ arm = moveit_commander.MoveGroupCommander('arm')
 arm.set_named_target('go')
 arm.go()
 
-head.go(np.array((0, -0.08*np.pi)))  # 0 deg (mirar hacia abajo un poco)
+head.go(np.array((0, -0.3*np.pi)))
 
 while not rospy.is_shutdown():
     image = rgbd.get_image()
