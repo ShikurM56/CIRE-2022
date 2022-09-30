@@ -119,7 +119,7 @@ def vision():
     while not rospy.is_shutdown():    
         if (status == "CUBE"):
 
-            time.sleep(3) #A que se estabilice
+            time.sleep(5) #A que se estabilice
             print ("Entre a CUBE")
 
             image=rgbd.get_image()  #dimensiones de la imagen
@@ -295,7 +295,7 @@ def vision():
         if (status == "DRILL"):
             #print ("Moviendo la cabeza por si no esta en la posicion")
             #head.go(np.array((0, -0.3*np.pi)))
-            time.sleep(3) #A que se estabilice
+            time.sleep(5) #A que se estabilice
             print ("Entre a DRILL")
 
             image=rgbd.get_image()  #dimensiones de la imagen
@@ -416,7 +416,7 @@ def vision():
 
         if (status == "WRENCH"):
 
-            time.sleep(2) #A que se estabilice
+            time.sleep(5) #A que se estabilice
             print ("Entre a WRENCH")
 
             image=rgbd.get_image()  #dimensiones de la imagen
@@ -543,6 +543,7 @@ def vision():
                 contador +=1
 
             contador = 1
+            archivo.write("------> Taladros <------\n")
             print ("------> TALADROS <------ ")
             print ("Taladros encontrados: " + str(len(drills_array)))
             for x in drills_array:
@@ -551,6 +552,7 @@ def vision():
                 contador +=1
             
             contador = 1
+            archivo.write("------> Llaves <------\n")
             print ("------> Llaves <------ ")
             print ("Llaves encontradas: " + str(len(wrenchs_array)))
             for x in wrenchs_array:
