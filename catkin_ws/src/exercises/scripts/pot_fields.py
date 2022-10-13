@@ -132,8 +132,12 @@ def get_robot_pose(listener):
         pass
     return [0,0,0]
 
+start = 1
 def callback_scan(msg):
-    global laser_readings
+    global laser_readings, pub_status, start
+    if start == 1:
+        pub_status.publish(True)
+        start = 0 
     laser_readings = [[msg.ranges[i], msg.angle_min+i*msg.angle_increment] for i in range(len(msg.ranges))]
 
 def draw_force_markers(robot_x, robot_y, attr_x, attr_y, rej_x, rej_y, res_x, res_y, pub_markers):
@@ -160,7 +164,6 @@ def main():
     pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist,  queue_size=10)
     pub_markers = rospy.Publisher('/navigation/pot_field_markers', Marker, queue_size=10)
     pub_status = rospy.Publisher('/aguas', Bool, queue_size=10)
-    
     listener = tf.TransformListener()
     rospy.spin()
 

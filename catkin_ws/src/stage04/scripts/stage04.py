@@ -21,9 +21,10 @@ def callback(data):
         goal_x = float(rows[row][1])
         goal_y = float(rows[row][2])
         print ("Posicion X: ", goal_x, " , Posicion Y: " , goal_y )
-        goal_msg = PoseStamped
+        goal_msg = PoseStamped()
         goal_msg.pose.position.x = goal_x
         goal_msg.pose.position.y = goal_y
+        print (goal_msg)
         pub.publish(goal_msg)
         row +=1
 
