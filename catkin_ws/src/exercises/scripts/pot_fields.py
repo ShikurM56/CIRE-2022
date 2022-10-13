@@ -102,7 +102,7 @@ def callback_pot_fields_goal(msg):
 
         robot_x, robot_y, robot_a = get_robot_pose(listener)
         dist_to_goal = math.sqrt((goal_x - robot_x)**2 + (goal_y - robot_y)**2)
-        tolerance = 0.1
+        tolerance = 0.2 # Changed from 0.1 to 0.2
         epsilon = 0.5
         while dist_to_goal > tolerance and not rospy.is_shutdown():
             afx, afy = attraction_force(robot_x, robot_y, goal_x, goal_y)
