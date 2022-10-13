@@ -10,8 +10,8 @@ def spawn_object(gazebo_name, name, x, y, z, yaw,roll=0.0 , pitch=0.0):
     global _path_xml, _path_model
     #_path_xml = '/home/cire2022/.gazebo/models/MODEL_NAME/model-1_4.sdf'
     #_path_model = '/home/cire2022/.gazebo/models'
-    _path_xml = '/home/shikur/CIRE-2022/models/MODEL_NAME/model-1_4.sdf'
-    _path_model = '/home/shikur/CIRE-2022/models'
+    _path_xml = '/home/cire2022/CIRE2022/models/MODEL_NAME/model-1_4.sdf'
+    _path_model = '/home/cire2022/CIRE2022/models'
     
     rospy.loginfo('Spawn: {0}'.format(name))
     initial_pose = Pose()
@@ -39,14 +39,14 @@ def spawner():
     
 
     np.random.seed(rand_seed)
-    _path_model = "/home/shikur/CIRE-2022/models"     
+    _path_model = "/home/cire2022/CIRE2022/models"     
     #_path_model = "/home/cire2022/.gazebo/models"     
     objs=os.listdir(_path_model)
     objs.sort()
     
     
 
-    num_objs=4
+    num_objs=2
     x_gaz,y_gaz= 0,1.21
     obj_ix=-1
 
@@ -60,7 +60,7 @@ def spawner():
 
 
 
-    num_objs=4
+    num_objs=2
     x_gaz,y_gaz= -3.0,4.0
     obj_ix=0
 
@@ -73,7 +73,7 @@ def spawner():
 
 
 
-    num_objs=4
+    num_objs=2
     x_gaz,y_gaz= 3.9,5.6
     obj_ix=1
 

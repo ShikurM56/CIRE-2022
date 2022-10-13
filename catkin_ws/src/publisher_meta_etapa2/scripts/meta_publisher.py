@@ -8,7 +8,7 @@ import tf
 
 
 def gen_random_goal():
-    rand_pos = np.asarray((4.5, 3.5))+ 0.5*np.random.randn(2)
+    rand_pos = np.asarray((-4.5,-3.5))+ 0.5*np.random.randn(2)
     rand_rot = tf.transformations.quaternion_from_euler(((np.random.rand()-0.5 )*2*np.pi) ,0,0 )
     
     pose_stamped=PoseStamped()
