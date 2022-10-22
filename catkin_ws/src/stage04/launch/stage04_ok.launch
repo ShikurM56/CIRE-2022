@@ -30,6 +30,8 @@
 </include>
 
 
+  <node name="stage04_nav" pkg="stage04" type="stage04_ok.py" output="screen"/>
+  <node name="stage04_pot" pkg="exercises" type="pot_fields.py" output="screen"/>
 
 </launch>
 

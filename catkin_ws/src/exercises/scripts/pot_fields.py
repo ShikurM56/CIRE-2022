@@ -22,6 +22,7 @@ from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker
 from sensor_msgs.msg import LaserScan
 
+import os
 
 NAME = "NOMBRE DE EQUIPO"
 
@@ -76,8 +77,8 @@ def rejection_force(robot_x, robot_y, robot_a, laser_readings):
     # donde force_x y force_y son las componentes  X y Y de la
     # fuerza repulsiva resultante con respecto al mapa. 
     #
-    beta = 7.0 #Rejection constant
-    d0   = 1.5 #Distance of influence
+    beta = 5.0 #Rejection constant
+    d0   = 1.0 #Distance of influence
     force_x, force_y = 0, 0
     for [distance, angle] in laser_readings:
         if distance < d0 and distance > 0:
@@ -102,7 +103,7 @@ def callback_pot_fields_goal(msg):
 
         robot_x, robot_y, robot_a = get_robot_pose(listener)
         dist_to_goal = math.sqrt((goal_x - robot_x)**2 + (goal_y - robot_y)**2)
-        tolerance = 0.2 # Changed from 0.1 to 0.2
+        tolerance = 0.05 # Changed from 0.1 to 0.2
         epsilon = 0.5
         while dist_to_goal > tolerance and not rospy.is_shutdown():
             afx, afy = attraction_force(robot_x, robot_y, goal_x, goal_y)
@@ -119,6 +120,8 @@ def callback_pot_fields_goal(msg):
             dist_to_goal = math.sqrt((goal_x - robot_x)**2 + (goal_y - robot_y)**2)
         pub_cmd_vel.publish(Twist())
         print("Goal point ready")
+        os.system("rosrun map_server map_saver -f ~/CIRE-2022/catkin_ws/src/stage04/maps/map_stage04")
+        print ("Map Saved")
         pub_status.publish(True)
 
 
