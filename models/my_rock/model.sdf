@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
-  <model name="my_rock03">
+  <model name="my_rock">
     <static>0</static>
         <link name='link'>
         <pose>0 0 0 0 0 0</pose>
@@ -10,17 +10,17 @@
         </inertial>
 
         <visual name='visual'>
-              <pose>0 0 0 0 0 0</pose>
+              <pose>0 0 .031 0 0 0</pose>
               <geometry>
                 <mesh>
-                  <uri>model://my_rock03/meshes/model.dae</uri>
+                  <uri>model://my_rock/meshes/model.dae</uri>
                   <scale>0.06 0.06 0.06</scale>
                 </mesh>
               </geometry>
               <material>
                 <script>
-                  <uri>model://my_rock03/materials/scripts</uri>
-                  <uri>model://my_rock03/materials/textures</uri>
+                  <uri>model://my_rock/materials/scripts</uri>
+                  <uri>model://my_rock/materials/textures</uri>
                   <name>myrock/Diffuse</name>
                 </script>
               </material>
@@ -29,9 +29,9 @@
             <collision name='collision'>
           <geometry>
             <mesh>
-               <uri>model://my_rock03/meshes/model.dae</uri>
-		 <pose>0 0 .031 0 0 0</pose>
-               <scale>0.06 0.06 0.06</scale>
+               <uri>model://my_rock/meshes/model.dae</uri>
+		 <pose>0 0 .031 0 0 0</pose>               
+		 <scale>0.06 0.06 0.06</scale>
              </mesh>
           </geometry>
           <max_contacts>10</max_contacts>

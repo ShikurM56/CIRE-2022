@@ -1,43 +1,42 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
-  <model name="my_rock03">
+  <model name="my_rockgreen">
     <static>0</static>
         <link name='link'>
         <pose>0 0 0 0 0 0</pose>
 
-	<inertial>
-          <mass>0.3</mass>
-        </inertial>
+        <inertial>
+                <mass>0.3</mass>
+              </inertial>
 
         <visual name='visual'>
-              <pose>0 0 0 0 0 0</pose>
+              <pose>0 0 .031 0 0 0</pose>
               <geometry>
                 <mesh>
-                  <uri>model://my_rock03/meshes/model.dae</uri>
+                  <uri>model://my_rock02/meshes/model.dae</uri>
                   <scale>0.06 0.06 0.06</scale>
                 </mesh>
               </geometry>
               <material>
                 <script>
-                  <uri>model://my_rock03/materials/scripts</uri>
-                  <uri>model://my_rock03/materials/textures</uri>
-                  <name>myrock/Diffuse</name>
-                </script>
+		<uri>file://media/materials/scripts/gazbo.material</uri>
+		<name>Gazebo/Green</name>
+		</script>
               </material>
             </visual>
+
 
             <collision name='collision'>
           <geometry>
             <mesh>
-               <uri>model://my_rock03/meshes/model.dae</uri>
-		 <pose>0 0 .031 0 0 0</pose>
-               <scale>0.06 0.06 0.06</scale>
+               <uri>model://my_rock02/meshes/model.dae</uri>
+               <scale>0.06 0.06 0.01</scale>
              </mesh>
           </geometry>
           <max_contacts>10</max_contacts>
           <surface>
             <bounce>
-              <restitution_coefficient>0.2</restitution_coefficient>
+              <restitution_coefficient>0.00001</restitution_coefficient>
               <threshold>0</threshold>
             </bounce>
             <friction>
@@ -50,7 +49,6 @@
             </contact>
           </surface>
         </collision>
-
         <velocity_decay>
           <linear>0</linear>
           <angular>0</angular>

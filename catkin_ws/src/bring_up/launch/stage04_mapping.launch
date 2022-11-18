@@ -6,6 +6,13 @@
     <arg name="world_name" value="$(find bring_up)/worlds/moon_station.world"/>
     <arg name="robot_pos" value="-x 0 -y 0 -z 0 -Y 0" />
     <arg name="use_laser_odom" value="false" />
+    <arg name="use_manipulation" value="false" />
+    <arg name="use_navigation" value="false" />
+    <arg name="use_perception" value="false" />
+    <arg name="use_task" value="false" />
+    <arg name="use_teleop" value="false" />
+    <arg name="use_web" value="false" />
+    <arg name="use_laser_odom" value="false" />
     <arg name="rviz" value="false"/>
   </include>
 
@@ -22,14 +29,5 @@
     <param name="maxRange" value="10.5"/>
     <param name="minimumScore" value="0.0"/>
   </node>
-  
-  
-<include file="$(find hsrb_moveit_config)/launch/hsrb_demo_with_controller.launch">
-  <arg name="use_gui" value="false"/>
-  <arg name="load_robot_description" value="false"/>
-</include>
-
-
-
 </launch>
 
